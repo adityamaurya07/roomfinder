@@ -259,7 +259,7 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                Post Vacant Room (Yha Khali H)
+                Post a Vacant Room
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 List your room with exact location & photos for potential renters

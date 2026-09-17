@@ -81,7 +81,7 @@ export default function Navbar({
             className="px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-xl text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-md shadow-emerald-600/20 active:scale-95 transition flex items-center gap-1.5"
           >
             <PlusCircle className="w-4 h-4" />
-            <span>Post Room <span className="hidden md:inline font-normal opacity-90">(Yha khali h)</span></span>
+            <span>Post Room <span className="hidden md:inline font-normal opacity-90">(List Vacant)</span></span>
           </button>
         </div>
       </div>

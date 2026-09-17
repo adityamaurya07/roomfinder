@@ -236,7 +236,7 @@ export default function RoomFinderApp() {
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
-            Kamre ki exact location map par dekhein ya apna khali room photos aur location ke saath 2 minute mein post karein.
+            View exact room locations on the interactive map, or list your vacant room with photos and exact GPS pin in 2 minutes.
           </p>
 
           {/* Unified Search Box */}
@@ -572,7 +572,7 @@ export default function RoomFinderApp() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
             <HomeIcon className="w-4 h-4 text-emerald-600" />
-            <span>RoomFinder • KirayePe Platform</span>
+            <span>RoomFinder • Direct Room Rental Platform</span>
           </div>
           <p>© 2026 RoomFinder. Direct Owner to Room Seeker with Exact Map Pinning.</p>
         </div>
