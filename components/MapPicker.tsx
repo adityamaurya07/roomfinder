@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Coordinates } from '@/types/room';
+import type * as LeafletType from 'leaflet';
 import { MapPin, Navigation, Check, AlertCircle, Loader2 } from 'lucide-react';
 
 interface MapPickerProps {
@@ -16,14 +17,34 @@ export default function MapPicker({
   selectedCity
 }: MapPickerProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const mapInstanceRef = useRef<LeafletType.Map | null>(null);
+  const markerRef = useRef<LeafletType.Marker | null>(null);
 
   const [coords, setCoords] = useState<Coordinates>(initialCoordinates);
   const [addressInfo, setAddressInfo] = useState<string>('');
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearching, setIsSearching] = useState<boolean>(false);
+
+  // Reverse geocoding helper (OpenStreetMap Nominatim)
+  const reverseGeocode = useCallback(async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en' } }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const display = data.display_name || '';
+        setAddressInfo(display);
+        onLocationSelect({ lat, lng }, display);
+      } else {
+        onLocationSelect({ lat, lng });
+      }
+    } catch {
+      onLocationSelect({ lat, lng });
+    }
+  }, [onLocationSelect]);
 
   // Initialize Map
   useEffect(() => {
@@ -33,6 +54,7 @@ export default function MapPicker({
       if (typeof window === 'undefined' || !mapContainerRef.current) return;
 
       const L = await import('leaflet');
+      if (!isMounted) return;
 
       // Check if map already initialized
       if (mapInstanceRef.current) return;
@@ -75,7 +97,7 @@ export default function MapPicker({
       });
 
       // Handle map click to reposition marker
-      map.on('click', (e: any) => {
+      map.on('click', (e: LeafletType.LeafletMouseEvent) => {
         marker.setLatLng(e.latlng);
         setCoords({ lat: e.latlng.lat, lng: e.latlng.lng });
         reverseGeocode(e.latlng.lat, e.latlng.lng);
@@ -94,7 +116,7 @@ export default function MapPicker({
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [initialCoordinates.lat, initialCoordinates.lng, reverseGeocode]);
 
   // Update center when city changes
   useEffect(() => {
@@ -120,27 +142,7 @@ export default function MapPicker({
       setCoords(target);
       onLocationSelect(target);
     }
-  }, [selectedCity]);
-
-  // Reverse geocoding helper (OpenStreetMap Nominatim)
-  const reverseGeocode = async (lat: number, lng: number) => {
-    try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-        { headers: { 'Accept-Language': 'en' } }
-      );
-      if (res.ok) {
-        const data = await res.json();
-        const display = data.display_name || '';
-        setAddressInfo(display);
-        onLocationSelect({ lat, lng }, display);
-      } else {
-        onLocationSelect({ lat, lng });
-      }
-    } catch {
-      onLocationSelect({ lat, lng });
-    }
-  };
+  }, [selectedCity, onLocationSelect]);
 
   // Search Address / Area
   const handleSearchAddress = async (e?: React.FormEvent | React.KeyboardEvent) => {
@@ -184,23 +186,25 @@ export default function MapPicker({
 
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const userLat = position.coords.latitude;
-        const userLng = position.coords.longitude;
-        const targetCoords = { lat: userLat, lng: userLng };
+      (pos) => {
+        const currentCoords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude
+        };
+        setCoords(currentCoords);
 
-        setCoords(targetCoords);
         if (mapInstanceRef.current && markerRef.current) {
-          mapInstanceRef.current.setView([userLat, userLng], 16);
-          markerRef.current.setLatLng([userLat, userLng]);
+          mapInstanceRef.current.setView([currentCoords.lat, currentCoords.lng], 16);
+          markerRef.current.setLatLng([currentCoords.lat, currentCoords.lng]);
         }
-        reverseGeocode(userLat, userLng);
+
+        reverseGeocode(currentCoords.lat, currentCoords.lng);
         setIsLocating(false);
       },
-      (error) => {
-        console.warn('Geolocation error:', error);
-        alert('Could not access current location. Please allow GPS access or pick manually on the map.');
+      (err) => {
+        console.error('Geolocation error:', err);
         setIsLocating(false);
+        alert('Could not access your location. Please check browser permissions.');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -208,29 +212,25 @@ export default function MapPicker({
 
   return (
     <div className="space-y-3">
-      {/* Search & GPS tools */}
+      {/* Search and Current Location bar */}
       <div className="flex flex-col sm:flex-row gap-2">
-        <div className="flex-1 flex gap-2">
+        <div className="relative flex-1">
           <input
             type="text"
-            placeholder="Search colony, landmark, or street name..."
+            placeholder="Search colony, metro station, landmark (e.g. Laxmi Nagar Delhi)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleSearchAddress();
-              }
-            }}
-            className="flex-1 px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            onKeyDown={(e) => e.key === 'Enter' && handleSearchAddress(e)}
+            className="w-full pl-9 pr-24 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
           />
+          <MapPin className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <button
             type="button"
             onClick={() => handleSearchAddress()}
             disabled={isSearching}
-            className="px-4 py-2 bg-slate-800 dark:bg-slate-700 hover:bg-slate-900 text-white rounded-lg text-sm font-medium transition flex items-center gap-1.5"
+            className="absolute right-1.5 top-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition"
           >
-            {isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Search'}
+            {isSearching ? 'Searching...' : 'Find'}
           </button>
         </div>
 
@@ -238,42 +238,45 @@ export default function MapPicker({
           type="button"
           onClick={handleDetectCurrentLocation}
           disabled={isLocating}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition flex items-center justify-center gap-2"
+          className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-1.5 transition border border-slate-200 dark:border-slate-700 whitespace-nowrap"
         >
           {isLocating ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-600" />
+              <span>Locating...</span>
+            </>
           ) : (
-            <Navigation className="w-4 h-4" />
+            <>
+              <Navigation className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Use My Current GPS</span>
+            </>
           )}
-          <span>Detect GPS</span>
         </button>
       </div>
 
-      {/* Interactive Map Canvas */}
-      <div className="relative rounded-xl overflow-hidden border-2 border-slate-200 dark:border-slate-800 shadow-inner">
-        <div
-          ref={mapContainerRef}
-          className="w-full h-64 sm:h-72 z-0"
-          style={{ minHeight: '260px' }}
-        />
-        <div className="absolute top-2 left-2 z-[400] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md px-3 py-1.5 rounded-md text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-md border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
+      {/* Map Element */}
+      <div className="relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-inner">
+        <div ref={mapContainerRef} className="w-full h-72 sm:h-80 z-0" />
+        
+        {/* Helper overlay tag */}
+        <div className="absolute top-3 left-3 z-[400] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md px-3 py-1.5 rounded-lg text-xs font-medium text-slate-700 dark:text-slate-200 shadow border border-slate-200 dark:border-slate-700 flex items-center gap-1.5">
           <MapPin className="w-3.5 h-3.5 text-emerald-600" />
-          <span>Click on map or drag pin to set exact room spot</span>
+          <span>Click anywhere or drag marker to set exact location</span>
         </div>
       </div>
 
-      {/* Selected Coordinate Details */}
-      <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 rounded-lg text-xs flex items-start gap-2.5">
-        <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-        <div className="flex-1 space-y-0.5">
-          <p className="font-semibold text-emerald-900 dark:text-emerald-300">
-            Selected Pin Coordinates: {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
-          </p>
-          {addressInfo && (
-            <p className="text-emerald-700 dark:text-emerald-400 line-clamp-2">
-              Detected: {addressInfo}
-            </p>
-          )}
+      {/* Selected Coordinates & Address Info Bar */}
+      <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
+        <div className="flex-1">
+          <span className="font-bold text-slate-700 dark:text-slate-300 block">
+            📍 Selected Pin Location:
+          </span>
+          <span className="text-slate-500 dark:text-slate-400 line-clamp-1">
+            {addressInfo || 'Fine-tune location marker on map above'}
+          </span>
+        </div>
+        <div className="px-2.5 py-1 bg-white dark:bg-slate-800 rounded-md border border-slate-200 dark:border-slate-700 text-[11px] font-mono font-semibold text-emerald-600 shrink-0">
+          Lat: {coords.lat.toFixed(5)}, Lng: {coords.lng.toFixed(5)}
         </div>
       </div>
     </div>

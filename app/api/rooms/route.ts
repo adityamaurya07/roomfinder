@@ -13,12 +13,57 @@ export async function GET(request: NextRequest) {
     const amenities = searchParams.get('amenities')?.split(',').filter(Boolean);
     const onlyAvailable = searchParams.get('onlyAvailable') === 'true';
     const sortBy = searchParams.get('sortBy') || 'newest';
+    const verifiedOnly = searchParams.get('verifiedOnly') === 'true';
+    const pricingType = searchParams.get('pricingType');
+    const roommateFood = searchParams.get('roommateFood');
+    const roommateSmoking = searchParams.get('roommateSmoking');
+    const roommateProfession = searchParams.get('roommateProfession')?.toLowerCase();
+    const hasVirtualTour = searchParams.get('hasVirtualTour') === 'true';
 
     let rooms = getAllRooms();
 
     // Filter by availability
     if (onlyAvailable) {
       rooms = rooms.filter((r) => r.isAvailable);
+    }
+
+    // Filter by verified status
+    if (verifiedOnly) {
+      rooms = rooms.filter((r) => r.isVerified);
+    }
+
+    // Filter by pricing type (Negotiable / Fixed Price)
+    if (pricingType && pricingType !== 'All') {
+      rooms = rooms.filter((r) => (r.pricingType || 'Fixed Price') === pricingType);
+    }
+
+    // Filter by virtual tour (video or 360)
+    if (hasVirtualTour) {
+      rooms = rooms.filter((r) => Boolean(r.virtualTour360Url || r.videoUrl));
+    }
+
+    // Filter by roommate food preference
+    if (roommateFood && roommateFood !== 'All') {
+      rooms = rooms.filter((r) => {
+        if (!r.roommatePreferences) return true;
+        return r.roommatePreferences.foodPreference === 'Any' || r.roommatePreferences.foodPreference === roommateFood;
+      });
+    }
+
+    // Filter by roommate smoking habit
+    if (roommateSmoking && roommateSmoking !== 'All') {
+      rooms = rooms.filter((r) => {
+        if (!r.roommatePreferences) return true;
+        return r.roommatePreferences.smoking === 'No Preference' || r.roommatePreferences.smoking === roommateSmoking;
+      });
+    }
+
+    // Filter by roommate profession
+    if (roommateProfession && roommateProfession !== 'all') {
+      rooms = rooms.filter((r) => {
+        if (!r.roommatePreferences?.professionPreference) return true;
+        return r.roommatePreferences.professionPreference.some(p => p.toLowerCase().includes(roommateProfession));
+      });
     }
 
     // Filter by city
@@ -130,6 +175,14 @@ export async function POST(request: NextRequest) {
       images: Array.isArray(body.images) && body.images.length > 0
         ? body.images
         : ['https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1200&q=80'],
+      videoUrl: body.videoUrl || '',
+      virtualTour360Url: body.virtualTour360Url || '',
+      isVerified: body.isVerified !== undefined ? Boolean(body.isVerified) : true,
+      verificationBadge: body.verificationBadge || (body.isVerified !== false ? 'Govt ID Verified' : undefined),
+      listerType: body.listerType || 'Owner',
+      pricingType: body.pricingType || 'Fixed Price',
+      nearbyPlaces: body.nearbyPlaces || undefined,
+      roommatePreferences: body.roommatePreferences || undefined,
       contact: {
         name: body.contact.name?.trim() || 'Owner',
         phone: body.contact.phone?.trim() || '',

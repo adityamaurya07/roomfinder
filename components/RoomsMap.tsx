@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { RoomListing } from '@/types/room';
+import type * as LeafletType from 'leaflet';
 
 interface RoomsMapProps {
   rooms: RoomListing[];
@@ -11,64 +12,15 @@ interface RoomsMapProps {
 
 export default function RoomsMap({ rooms, onSelectRoom, selectedRoomId }: RoomsMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-  const markersGroupRef = useRef<any>(null);
+  const mapInstanceRef = useRef<LeafletType.Map | null>(null);
+  const markersGroupRef = useRef<LeafletType.FeatureGroup | null>(null);
 
-  useEffect(() => {
-    let isMounted = true;
+  const renderMarkers = useCallback((L: typeof LeafletType) => {
+    const markersGroup = markersGroupRef.current;
+    const mapInstance = mapInstanceRef.current;
+    if (!markersGroup || !mapInstance) return;
 
-    const initMap = async () => {
-      if (typeof window === 'undefined' || !mapContainerRef.current) return;
-
-      const L = await import('leaflet');
-
-      if (mapInstanceRef.current) return;
-
-      // Default center: India or first room
-      const firstRoom = rooms[0];
-      const defaultCenter: [number, number] = firstRoom
-        ? [firstRoom.coordinates.lat, firstRoom.coordinates.lng]
-        : [28.6139, 77.2090];
-
-      const map = L.map(mapContainerRef.current).setView(defaultCenter, 11);
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(map);
-
-      const markersGroup = L.featureGroup().addTo(map);
-
-      mapInstanceRef.current = map;
-      markersGroupRef.current = markersGroup;
-
-      renderMarkers(L);
-    };
-
-    initMap();
-
-    return () => {
-      isMounted = false;
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
-  // Re-render markers when rooms or selection changes
-  useEffect(() => {
-    if (!mapInstanceRef.current || !markersGroupRef.current) return;
-
-    import('leaflet').then((L) => {
-      renderMarkers(L);
-    });
-  }, [rooms, selectedRoomId]);
-
-  const renderMarkers = (L: any) => {
-    if (!markersGroupRef.current || !mapInstanceRef.current) return;
-
-    markersGroupRef.current.clearLayers();
+    markersGroup.clearLayers();
 
     if (rooms.length === 0) return;
 
@@ -145,19 +97,71 @@ export default function RoomsMap({ rooms, onSelectRoom, selectedRoomId }: RoomsM
         onSelectRoom(room);
       });
 
-      markersGroupRef.current.addLayer(marker);
+      markersGroup.addLayer(marker);
     });
 
     // Auto-fit bounds
     try {
-      const bounds = markersGroupRef.current.getBounds();
+      const bounds = markersGroup.getBounds();
       if (bounds.isValid()) {
-        mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+        mapInstance.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
       }
     } catch {
       // ignore
     }
-  };
+  }, [rooms, selectedRoomId, onSelectRoom]);
+
+  useEffect(() => {
+    let isSubscribed = true;
+
+    const initMap = async () => {
+      if (typeof window === 'undefined' || !mapContainerRef.current) return;
+
+      const L = await import('leaflet');
+      if (!isSubscribed) return;
+
+      if (mapInstanceRef.current) return;
+
+      // Default center: India or first room
+      const firstRoom = rooms[0];
+      const defaultCenter: [number, number] = firstRoom
+        ? [firstRoom.coordinates.lat, firstRoom.coordinates.lng]
+        : [28.6139, 77.2090];
+
+      const map = L.map(mapContainerRef.current).setView(defaultCenter, 11);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      const markersGroup = L.featureGroup().addTo(map);
+
+      mapInstanceRef.current = map;
+      markersGroupRef.current = markersGroup;
+
+      renderMarkers(L);
+    };
+
+    initMap();
+
+    return () => {
+      isSubscribed = false;
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, [renderMarkers, rooms]);
+
+  // Re-render markers when rooms or selection changes
+  useEffect(() => {
+    if (!mapInstanceRef.current || !markersGroupRef.current) return;
+
+    import('leaflet').then((L) => {
+      renderMarkers(L);
+    });
+  }, [renderMarkers]);
 
   return (
     <div className="relative w-full h-full min-h-[500px] rounded-2xl overflow-hidden shadow-lg border border-slate-200 dark:border-slate-800">

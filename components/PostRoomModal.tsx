@@ -81,6 +81,30 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
   const [customImageUrl, setCustomImageUrl] = useState<string>('');
   const [isUploading, setIsUploading] = useState<boolean>(false);
 
+  // Pricing Tag & Verification
+  const [pricingType, setPricingType] = useState<'Negotiable' | 'Fixed Price'>('Negotiable');
+  const [listerType, setListerType] = useState<'Owner' | 'Broker' | 'Flatmate'>('Owner');
+  const [isVerified, setIsVerified] = useState<boolean>(true);
+  const [verificationBadge, setVerificationBadge] = useState<'Govt ID Verified' | 'Aadhaar Verified' | 'Owner Verified' | 'Broker Verified'>('Aadhaar Verified');
+
+  // Hyper-Local Nearby Places
+  const [metroName, setMetroName] = useState<string>('');
+  const [metroDistance, setMetroDistance] = useState<string>('0.5');
+  const [groceryName, setGroceryName] = useState<string>('');
+  const [groceryDistance, setGroceryDistance] = useState<string>('0.2');
+  const [gymName, setGymName] = useState<string>('');
+  const [gymDistance, setGymDistance] = useState<string>('0.4');
+
+  // Roommate / Flatmate Lifestyle Preferences
+  const [roommateFood, setRoommateFood] = useState<'Veg' | 'Non-Veg' | 'Any'>('Any');
+  const [roommateSmoking, setRoommateSmoking] = useState<'Non-Smoker' | 'Smoker' | 'No Preference'>('Non-Smoker');
+  const [roommateDrinking, setRoommateDrinking] = useState<'Non-Drinker' | 'Social' | 'No Preference'>('No Preference');
+  const [professionPreference, setProfessionPreference] = useState<string>('IT, Working Professionals, Students');
+
+  // Virtual 360 & Video Tour
+  const [videoUrl, setVideoUrl] = useState<string>('');
+  const [virtualTour360Url, setVirtualTour360Url] = useState<string>('');
+
   // Contact
   const [contactName, setContactName] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
@@ -203,6 +227,10 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
         securityDeposit: Number(securityDeposit || pricePerMonth),
         maintenanceIncluded,
         availableFrom,
+        pricingType,
+        isVerified,
+        verificationBadge: isVerified ? verificationBadge : undefined,
+        listerType,
         city,
         area,
         fullAddress: fullAddress || `${area}, ${city}`,
@@ -211,6 +239,20 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
         amenities: selectedAmenities,
         furnishedStatus,
         images: imageUrls.length > 0 ? imageUrls : [SAMPLE_PRESETS[0]],
+        videoUrl: videoUrl.trim() || undefined,
+        virtualTour360Url: virtualTour360Url.trim() || undefined,
+        nearbyPlaces: {
+          metro: metroName.trim() ? { name: metroName.trim(), distanceKm: Number(metroDistance) || 0.8 } : undefined,
+          grocery: groceryName.trim() ? { name: groceryName.trim(), distanceKm: Number(groceryDistance) || 0.3 } : undefined,
+          gym: gymName.trim() ? { name: gymName.trim(), distanceKm: Number(gymDistance) || 0.5 } : undefined
+        },
+        roommatePreferences: {
+          foodPreference: roommateFood,
+          smoking: roommateSmoking,
+          drinking: roommateDrinking,
+          professionPreference: professionPreference.split(',').map(p => p.trim()).filter(Boolean),
+          genderPreference: suitableFor === 'Boys' ? 'Boys' : suitableFor === 'Girls' ? 'Girls' : 'Any'
+        },
         contact: {
           name: contactName,
           phone: phone || whatsapp,
@@ -424,6 +466,114 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
                 </div>
               </div>
 
+              {/* Price Negotiation Tag */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                    Price Negotiation Tag *
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Saves time by clearly indicating whether rent is negotiable
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPricingType('Negotiable')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                      pricingType === 'Negotiable'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    💬 Negotiable
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPricingType('Fixed Price')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
+                      pricingType === 'Fixed Price'
+                        ? 'bg-blue-600 text-white shadow-sm'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                    }`}
+                  >
+                    🔒 Fixed Price
+                  </button>
+                </div>
+              </div>
+
+              {/* Roommate / Flatmate Lifestyle Preferences Section */}
+              <div className="p-3.5 bg-amber-50/50 dark:bg-amber-950/20 rounded-xl border border-amber-200/80 dark:border-amber-900/40 space-y-3">
+                <div>
+                  <span className="text-xs font-bold text-amber-900 dark:text-amber-300 block">
+                    Roommate & Flatmate Lifestyle Matching
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Match with compatible roommates based on habits and profession
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Food Preference
+                    </label>
+                    <select
+                      value={roommateFood}
+                      onChange={(e) => setRoommateFood(e.target.value as 'Veg' | 'Non-Veg' | 'Any')}
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    >
+                      <option value="Any">Any (No Preference)</option>
+                      <option value="Veg">Vegetarian Only</option>
+                      <option value="Non-Veg">Non-Veg Friendly</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Smoking Habit
+                    </label>
+                    <select
+                      value={roommateSmoking}
+                      onChange={(e) => setRoommateSmoking(e.target.value as 'Non-Smoker' | 'Smoker' | 'No Preference')}
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    >
+                      <option value="Non-Smoker">Strictly Non-Smoker</option>
+                      <option value="Smoker">Smoker Friendly</option>
+                      <option value="No Preference">No Preference</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      Drinking Habit
+                    </label>
+                    <select
+                      value={roommateDrinking}
+                      onChange={(e) => setRoommateDrinking(e.target.value as 'Non-Drinker' | 'Social' | 'No Preference')}
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    >
+                      <option value="No Preference">No Preference</option>
+                      <option value="Non-Drinker">Non-Drinker Only</option>
+                      <option value="Social">Social Drinker</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Preferred Profession (e.g. IT, Students, Corporate)
+                  </label>
+                  <input
+                    type="text"
+                    value={professionPreference}
+                    onChange={(e) => setProfessionPreference(e.target.value)}
+                    placeholder="IT, Corporate, Students, Healthcare"
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
               {/* Maintenance & Furnishing */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
                 <div>
@@ -432,7 +582,7 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
                   </label>
                   <select
                     value={furnishedStatus}
-                    onChange={(e) => setFurnishedStatus(e.target.value as any)}
+                    onChange={(e) => setFurnishedStatus(e.target.value as 'Unfurnished' | 'Semi-Furnished' | 'Fully-Furnished')}
                     className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                   >
                     <option value="Semi-Furnished">Semi-Furnished</option>
@@ -578,6 +728,86 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
                     onChange={(e) => setLandmark(e.target.value)}
                     className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                   />
+                </div>
+              </div>
+
+              {/* Hyper-Local Nearby Proximity Inputs */}
+              <div className="p-3.5 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-200/80 dark:border-blue-900/40 space-y-3">
+                <div>
+                  <span className="text-xs font-bold text-blue-900 dark:text-blue-300 block">
+                    Hyper-Local Proximity (Nearby Amenities)
+                  </span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Helps tenants see walkability and commute convenience
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Metro */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      🚇 Nearest Metro / Transit
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Saket Metro Gate 2"
+                      value={metroName}
+                      onChange={(e) => setMetroName(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-1"
+                    />
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="Distance (km) e.g. 0.4"
+                      value={metroDistance}
+                      onChange={(e) => setMetroDistance(e.target.value)}
+                      className="w-full px-2.5 py-1 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Grocery */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      🛒 Nearest Grocery / Mart
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 24Seven / Reliance Mart"
+                      value={groceryName}
+                      onChange={(e) => setGroceryName(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-1"
+                    />
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="Distance (km) e.g. 0.2"
+                      value={groceryDistance}
+                      onChange={(e) => setGroceryDistance(e.target.value)}
+                      className="w-full px-2.5 py-1 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                  </div>
+
+                  {/* Gym */}
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      🏋️ Nearest Gym / Fitness
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Anytime Fitness"
+                      value={gymName}
+                      onChange={(e) => setGymName(e.target.value)}
+                      className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-1"
+                    />
+                    <input
+                      type="number"
+                      step="0.1"
+                      placeholder="Distance (km) e.g. 0.5"
+                      value={gymDistance}
+                      onChange={(e) => setGymDistance(e.target.value)}
+                      className="w-full px-2.5 py-1 text-[11px] rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -769,6 +999,107 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
                     />
+                  </div>
+                </div>
+
+                {/* Lister Role & ID Verification */}
+                <div className="p-3.5 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-xl border border-emerald-200/80 dark:border-emerald-900/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 block">
+                        Lister Identity & Safety Verification
+                      </span>
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Verified listings get 3x more views and higher seeker trust
+                      </span>
+                    </div>
+
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isVerified}
+                        onChange={(e) => setIsVerified(e.target.checked)}
+                        className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">
+                        Enable Verified Badge
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        I am the:
+                      </label>
+                      <select
+                        value={listerType}
+                        onChange={(e) => setListerType(e.target.value as 'Owner' | 'Broker' | 'Flatmate')}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      >
+                        <option value="Owner">Property Owner</option>
+                        <option value="Broker">Authorized Broker</option>
+                        <option value="Flatmate">Existing Flatmate</option>
+                      </select>
+                    </div>
+
+                    {isVerified && (
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                          Verification Badge Type
+                        </label>
+                        <select
+                          value={verificationBadge}
+                          onChange={(e) => setVerificationBadge(e.target.value as 'Govt ID Verified' | 'Aadhaar Verified' | 'Owner Verified' | 'Broker Verified')}
+                          className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                        >
+                          <option value="Aadhaar Verified">Aadhaar Verified (Recommended)</option>
+                          <option value="Govt ID Verified">Govt ID Verified</option>
+                          <option value="Owner Verified">Owner Title Verified</option>
+                          <option value="Broker Verified">Broker Verified</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Virtual 360 & Video Walkthrough Inputs */}
+                <div className="p-3.5 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-xl border border-indigo-200/80 dark:border-indigo-900/40 space-y-3">
+                  <div>
+                    <span className="text-xs font-bold text-indigo-900 dark:text-indigo-300 block">
+                      ✨ Virtual 360° Panorama & Video Walkthrough (Optional)
+                    </span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Allow seekers to inspect the room virtually without visiting repeatedly
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        Video Walkthrough Link (MP4 / Web Video)
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://.../room-walkthrough.mp4"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                        360° Panorama Image URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://.../equirectangular-360.jpg"
+                        value={virtualTour360Url}
+                        onChange={(e) => setVirtualTour360Url(e.target.value)}
+                        className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>

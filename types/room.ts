@@ -39,6 +39,33 @@ export interface RoomListing {
   
   // Media
   images: string[];
+  videoUrl?: string;
+  virtualTour360Url?: string;
+
+  // Verification & Lister Type
+  isVerified?: boolean;
+  verificationBadge?: 'Govt ID Verified' | 'Aadhaar Verified' | 'Owner Verified' | 'Broker Verified';
+  listerType?: 'Owner' | 'Broker' | 'Flatmate';
+
+  // Pricing Negotiation
+  pricingType?: 'Negotiable' | 'Fixed Price';
+
+  // Hyper-Local Nearby Amenities
+  nearbyPlaces?: {
+    metro?: { name: string; distanceKm: number };
+    grocery?: { name: string; distanceKm: number };
+    gym?: { name: string; distanceKm: number };
+    collegeOrOffice?: { name: string; distanceKm: number };
+  };
+
+  // Roommate / Flatmate Lifestyle Preferences
+  roommatePreferences?: {
+    foodPreference: 'Veg' | 'Non-Veg' | 'Any';
+    smoking: 'Non-Smoker' | 'Smoker' | 'No Preference';
+    drinking: 'Non-Drinker' | 'Social' | 'No Preference';
+    professionPreference: string[];
+    genderPreference: 'Boys' | 'Girls' | 'Any';
+  };
 
   // Owner / Contact
   contact: RoomContact;
@@ -58,4 +85,10 @@ export interface RoomFilterState {
   amenities: string[];
   onlyAvailable: boolean;
   sortBy: 'newest' | 'price_asc' | 'price_desc';
+  pricingType?: 'All' | 'Negotiable' | 'Fixed Price';
+  verifiedOnly?: boolean;
+  roommateFood?: 'All' | 'Veg' | 'Non-Veg';
+  roommateSmoking?: 'All' | 'Non-Smoker' | 'Smoker';
+  roommateProfession?: string;
+  hasVirtualTour?: boolean;
 }

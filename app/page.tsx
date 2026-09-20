@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { RoomListing, RoomType, SuitableFor } from '@/types/room';
 import Navbar from '@/components/Navbar';
 import RoomCard from '@/components/RoomCard';
@@ -8,6 +8,7 @@ import RoomDetailModal from '@/components/RoomDetailModal';
 import PostRoomModal from '@/components/PostRoomModal';
 import MyListingsModal from '@/components/MyListingsModal';
 import RoomsMap from '@/components/RoomsMap';
+import InAppChatModal from '@/components/InAppChatModal';
 import {
   Search,
   MapPin,
@@ -15,7 +16,6 @@ import {
   PlusCircle,
   Sparkles,
   Home as HomeIcon,
-  Check,
   RefreshCw,
   X,
   Building,
@@ -24,7 +24,11 @@ import {
   Grid3X3,
   Map as MapIcon,
   ShieldCheck,
-  MessageSquare
+  MessageSquare,
+  Compass,
+  Utensils,
+  Cigarette,
+  Check
 } from 'lucide-react';
 
 const CITIES = ['All', 'Delhi', 'Mumbai', 'Bengaluru', 'Pune', 'Hyderabad', 'Noida', 'Gurugram', 'Jaipur'];
@@ -55,7 +59,7 @@ export default function RoomFinderApp() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'explore' | 'map'>('explore');
 
-  // Search & Filter state
+  // Search & Basic Filter state
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCity, setSelectedCity] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
@@ -66,13 +70,33 @@ export default function RoomFinderApp() {
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
   const [showFilterDrawer, setShowFilterDrawer] = useState<boolean>(false);
 
+  // Next-Gen 6 Core Features Filter States
+  const [verifiedOnly, setVerifiedOnly] = useState<boolean>(false);
+  const [selectedPricingType, setSelectedPricingType] = useState<string>('All');
+  const [hasVirtualTour, setHasVirtualTour] = useState<boolean>(false);
+  const [roommateFood, setRoommateFood] = useState<string>('All');
+  const [roommateSmoking, setRoommateSmoking] = useState<string>('All');
+  const [roommateProfession, setRoommateProfession] = useState<string>('all');
+
   // Modals state
   const [selectedRoom, setSelectedRoom] = useState<RoomListing | null>(null);
   const [isPostModalOpen, setIsPostModalOpen] = useState<boolean>(false);
   const [isMyListingsOpen, setIsMyListingsOpen] = useState<boolean>(false);
+  const [chatRoom, setChatRoom] = useState<RoomListing | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState<boolean>(false);
 
   // Local owner state
-  const [myRoomIds, setMyRoomIds] = useState<string[]>([]);
+  const [myRoomIds, setMyRoomIds] = useState<string[]>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('kirayepe_my_rooms');
+        if (stored) return JSON.parse(stored);
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
   const [notification, setNotification] = useState<string | null>(null);
 
   const showToast = (msg: string) => {
@@ -80,21 +104,13 @@ export default function RoomFinderApp() {
     setTimeout(() => setNotification(null), 3500);
   };
 
-  // Load My Listings IDs from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem('kirayepe_my_rooms');
-      if (stored) {
-        setMyRoomIds(JSON.parse(stored));
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
+  const handleOpenChat = (room: RoomListing) => {
+    setChatRoom(room);
+    setIsChatOpen(true);
+  };
 
   // Fetch rooms from backend API
-  const fetchRooms = async () => {
-    setIsLoading(true);
+  const fetchRooms = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (searchQuery) params.append('q', searchQuery);
@@ -104,6 +120,12 @@ export default function RoomFinderApp() {
       if (maxBudget < 35000) params.append('maxPrice', maxBudget.toString());
       if (selectedAmenities.length > 0) params.append('amenities', selectedAmenities.join(','));
       if (onlyAvailable) params.append('onlyAvailable', 'true');
+      if (verifiedOnly) params.append('verifiedOnly', 'true');
+      if (selectedPricingType !== 'All') params.append('pricingType', selectedPricingType);
+      if (hasVirtualTour) params.append('hasVirtualTour', 'true');
+      if (roommateFood !== 'All') params.append('roommateFood', roommateFood);
+      if (roommateSmoking !== 'All') params.append('roommateSmoking', roommateSmoking);
+      if (roommateProfession !== 'all') params.append('roommateProfession', roommateProfession);
       params.append('sortBy', sortBy);
 
       const res = await fetch(`/api/rooms?${params.toString()}`);
@@ -116,11 +138,35 @@ export default function RoomFinderApp() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    searchQuery,
+    selectedCity,
+    selectedType,
+    selectedSuitable,
+    maxBudget,
+    selectedAmenities,
+    onlyAvailable,
+    verifiedOnly,
+    selectedPricingType,
+    hasVirtualTour,
+    roommateFood,
+    roommateSmoking,
+    roommateProfession,
+    sortBy
+  ]);
 
   useEffect(() => {
-    fetchRooms();
-  }, [selectedCity, selectedType, selectedSuitable, maxBudget, selectedAmenities, onlyAvailable, sortBy]);
+    let ignore = false;
+    Promise.resolve().then(() => {
+      if (!ignore) {
+        setIsLoading(true);
+        fetchRooms();
+      }
+    });
+    return () => {
+      ignore = true;
+    };
+  }, [fetchRooms]);
 
   // Handle Search submit
   const handleSearch = (e: React.FormEvent) => {
@@ -138,6 +184,12 @@ export default function RoomFinderApp() {
     setSelectedAmenities([]);
     setOnlyAvailable(true);
     setSortBy('newest');
+    setVerifiedOnly(false);
+    setSelectedPricingType('All');
+    setHasVirtualTour(false);
+    setRoommateFood('All');
+    setRoommateSmoking('All');
+    setRoommateProfession('all');
   };
 
   // Handle new room posted by owner
@@ -195,6 +247,12 @@ export default function RoomFinderApp() {
     (selectedType !== 'All' ? 1 : 0) +
     (selectedSuitable !== 'All' ? 1 : 0) +
     (maxBudget < 35000 ? 1 : 0) +
+    (verifiedOnly ? 1 : 0) +
+    (selectedPricingType !== 'All' ? 1 : 0) +
+    (hasVirtualTour ? 1 : 0) +
+    (roommateFood !== 'All' ? 1 : 0) +
+    (roommateSmoking !== 'All' ? 1 : 0) +
+    (roommateProfession !== 'all' ? 1 : 0) +
     selectedAmenities.length;
 
   return (
@@ -217,7 +275,7 @@ export default function RoomFinderApp() {
       />
 
       {/* Hero Search Section */}
-      <div className="relative bg-gradient-to-b from-emerald-900 via-teal-900 to-slate-900 text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="relative bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-900 text-white pt-10 pb-14 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Glow decorative orbs */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-10 right-0 w-80 h-80 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
@@ -225,22 +283,22 @@ export default function RoomFinderApp() {
         <div className="max-w-5xl mx-auto text-center space-y-4 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold backdrop-blur-md">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Zero Brokerage • Exact GPS Pin • Direct WhatsApp Contact</span>
+            <span>ID Verified Hosts • Hyper-Local Maps • 360° Tours • Safe Direct Chat</span>
           </div>
 
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-            Find Your Next Room or{' '}
+            Find Your Room with{' '}
             <span className="bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-              Post Vacant Rooms
+              Hyper-Local Precision
             </span>
           </h1>
 
           <p className="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto">
-            View exact room locations on the interactive map, or list your vacant room with photos and exact GPS pin in 2 minutes.
+            Check exact distance to your metro, gym & office, inspect rooms in 360° virtual tours, and chat directly with verified owners without broker spam.
           </p>
 
           {/* Unified Search Box */}
-          <div className="pt-4 max-w-3xl mx-auto">
+          <div className="pt-2 max-w-3xl mx-auto">
             <form
               onSubmit={handleSearch}
               className="bg-white dark:bg-slate-900 p-2 sm:p-2.5 rounded-2xl shadow-2xl border border-white/20 flex flex-col sm:flex-row items-center gap-2 text-slate-900 dark:text-white"
@@ -266,7 +324,7 @@ export default function RoomFinderApp() {
                 <Search className="w-4 h-4 text-slate-400 shrink-0" />
                 <input
                   type="text"
-                  placeholder="Search colony, area (e.g. Saket, Koramangala, Viman Nagar)..."
+                  placeholder="Search colony, metro, tech park (e.g. Saket, Koramangala, Viman Nagar)..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-sm focus:outline-none placeholder-slate-400"
@@ -283,20 +341,66 @@ export default function RoomFinderApp() {
             </form>
           </div>
 
-          {/* Quick Stats or Highlights */}
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-xs text-slate-300">
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>100% Direct Owner</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <MapIcon className="w-4 h-4 text-emerald-400" />
-              <span>Exact GPS Coordinates</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <MessageSquare className="w-4 h-4 text-emerald-400" />
-              <span>Instant WhatsApp Chat</span>
-            </div>
+          {/* Quick Smart Filter Pills Bar */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+            {/* Verified Badge Filter Pill */}
+            <button
+              type="button"
+              onClick={() => setVerifiedOnly(!verifiedOnly)}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 backdrop-blur-md border ${
+                verifiedOnly
+                  ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
+                  : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/20'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>🛡️ ID Verified Only</span>
+              {verifiedOnly && <Check className="w-3 h-3" />}
+            </button>
+
+            {/* Negotiable Price Filter Pill */}
+            <button
+              type="button"
+              onClick={() => setSelectedPricingType(selectedPricingType === 'Negotiable' ? 'All' : 'Negotiable')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 backdrop-blur-md border ${
+                selectedPricingType === 'Negotiable'
+                  ? 'bg-emerald-500 text-white border-emerald-400 shadow-md shadow-emerald-500/30'
+                  : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/20'
+              }`}
+            >
+              <span>💬 Negotiable Price Only</span>
+              {selectedPricingType === 'Negotiable' && <Check className="w-3 h-3" />}
+            </button>
+
+            {/* 360 Virtual Tour Filter Pill */}
+            <button
+              type="button"
+              onClick={() => setHasVirtualTour(!hasVirtualTour)}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 backdrop-blur-md border ${
+                hasVirtualTour
+                  ? 'bg-indigo-600 text-white border-indigo-400 shadow-md shadow-indigo-600/30'
+                  : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/20'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>✨ 360° / Video Tour</span>
+              {hasVirtualTour && <Check className="w-3 h-3" />}
+            </button>
+
+            {/* Flatmates / Roommates */}
+            <button
+              type="button"
+              onClick={() => setSelectedType(selectedType === 'Flatmate' ? 'All' : 'Flatmate')}
+              className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 backdrop-blur-md border ${
+                selectedType === 'Flatmate'
+                  ? 'bg-amber-500 text-white border-amber-400 shadow-md shadow-amber-500/30'
+                  : 'bg-white/10 hover:bg-white/20 text-slate-200 border-white/20'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>👥 Roommate / Flatmate Wanted</span>
+              {selectedType === 'Flatmate' && <Check className="w-3 h-3" />}
+            </button>
           </div>
         </div>
       </div>
@@ -334,7 +438,7 @@ export default function RoomFinderApp() {
               }`}
             >
               <SlidersHorizontal className="w-3.5 h-3.5" />
-              <span>Filters</span>
+              <span>Smart Filters</span>
               {activeFilterCount > 0 && (
                 <span className="bg-emerald-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center">
                   {activeFilterCount}
@@ -345,7 +449,7 @@ export default function RoomFinderApp() {
             {/* Sort Dropdown */}
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as 'newest' | 'price_asc' | 'price_desc')}
               className="px-3 py-1.5 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 focus:outline-none"
             >
               <option value="newest">Newest First</option>
@@ -359,7 +463,7 @@ export default function RoomFinderApp() {
                 onClick={() => setActiveTab('explore')}
                 className={`p-1.5 rounded-lg transition ${
                   activeTab === 'explore'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                    ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 title="Grid View"
@@ -370,7 +474,7 @@ export default function RoomFinderApp() {
                 onClick={() => setActiveTab('map')}
                 className={`p-1.5 rounded-lg transition ${
                   activeTab === 'map'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                    ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
                 title="Map View"
@@ -381,25 +485,24 @@ export default function RoomFinderApp() {
           </div>
         </div>
 
-        {/* Expandable Filter Drawer */}
+        {/* Expandable Smart Filter Drawer */}
         {showFilterDrawer && (
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-lg mb-6 space-y-4 animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl mb-6 space-y-5 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
-                <span>Refine Search Results</span>
+                <span>Filters & Roommate Compatibility</span>
               </h3>
               <button
                 onClick={handleResetFilters}
-                className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:underline flex items-center gap-1"
+                className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
               >
-                <RefreshCw className="w-3 h-3" />
-                <span>Reset All</span>
+                Clear All
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {/* Suitable For */}
+            {/* Row 1: Tenant Preference, Budget, and Negotiation */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Tenant Preference
@@ -407,7 +510,7 @@ export default function RoomFinderApp() {
                 <select
                   value={selectedSuitable}
                   onChange={(e) => setSelectedSuitable(e.target.value)}
-                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
                 >
                   {SUITABLE_OPTIONS.map((opt) => (
                     <option key={opt} value={opt}>
@@ -417,16 +520,10 @@ export default function RoomFinderApp() {
                 </select>
               </div>
 
-              {/* Max Budget Slider */}
               <div>
-                <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Max Monthly Rent
-                  </label>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                    ₹{maxBudget.toLocaleString()}
-                  </span>
-                </div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Max Budget: ₹{maxBudget.toLocaleString()} / month
+                </label>
                 <input
                   type="range"
                   min={3000}
@@ -434,22 +531,119 @@ export default function RoomFinderApp() {
                   step={500}
                   value={maxBudget}
                   onChange={(e) => setMaxBudget(Number(e.target.value))}
-                  className="w-full accent-emerald-600"
+                  className="w-full accent-emerald-600 mt-2"
                 />
               </div>
 
-              {/* Only Available toggle */}
-              <div className="flex items-center pt-5">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800 dark:text-slate-200">
-                  <input
-                    type="checkbox"
-                    checked={onlyAvailable}
-                    onChange={(e) => setOnlyAvailable(e.target.checked)}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>Only show Vacant rooms</span>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Price Negotiation Policy
                 </label>
+                <select
+                  value={selectedPricingType}
+                  onChange={(e) => setSelectedPricingType(e.target.value)}
+                  className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                >
+                  <option value="All">All Pricing Types</option>
+                  <option value="Negotiable">💬 Negotiable Only</option>
+                  <option value="Fixed Price">🔒 Fixed Price Only</option>
+                </select>
               </div>
+            </div>
+
+            {/* Row 2: Roommate Lifestyle Matchers */}
+            <div className="p-3.5 bg-amber-50/60 dark:bg-amber-950/20 rounded-xl border border-amber-200/80 dark:border-amber-900/40 space-y-2.5">
+              <span className="text-xs font-bold text-amber-900 dark:text-amber-300 block flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-amber-600" />
+                <span>Roommate Matching Filters (Habits & Profession)</span>
+              </span>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Food Preference
+                  </label>
+                  <select
+                    value={roommateFood}
+                    onChange={(e) => setRoommateFood(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="All">All Food Habits</option>
+                    <option value="Veg">Vegetarian Roommates Only</option>
+                    <option value="Non-Veg">Non-Veg Friendly</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Smoking Habits
+                  </label>
+                  <select
+                    value={roommateSmoking}
+                    onChange={(e) => setRoommateSmoking(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="All">Any Smoking Policy</option>
+                    <option value="Non-Smoker">Strictly Non-Smokers</option>
+                    <option value="Smoker">Smoker Friendly</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Tenant Profession Focus
+                  </label>
+                  <select
+                    value={roommateProfession}
+                    onChange={(e) => setRoommateProfession(e.target.value)}
+                    className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  >
+                    <option value="all">All Professions</option>
+                    <option value="it">IT / Software Engineers</option>
+                    <option value="student">Students & Interns</option>
+                    <option value="finance">Finance / Corporate</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Row 3: Toggles for Verified, Vacant, Virtual Tour */}
+            <div className="flex flex-wrap items-center gap-6 pt-1">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={verifiedOnly}
+                  onChange={(e) => setVerifiedOnly(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+                <span className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Verified Listings & Owners Only</span>
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-800 dark:text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={hasVirtualTour}
+                  onChange={(e) => setHasVirtualTour(e.target.checked)}
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400">
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>Has 360° Panorama or Video Tour</span>
+                </span>
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-800 dark:text-slate-200">
+                <input
+                  type="checkbox"
+                  checked={onlyAvailable}
+                  onChange={(e) => setOnlyAvailable(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                />
+                <span>Only show Vacant / Available rooms</span>
+              </label>
             </div>
 
             {/* Popular Amenities Filter */}
@@ -488,11 +682,16 @@ export default function RoomFinderApp() {
         {/* Results Header */}
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white">
-              {selectedCity !== 'All' ? `Available Rooms in ${selectedCity}` : 'Available Rooms'}
+            <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+              <span>{selectedCity !== 'All' ? `Available Rooms in ${selectedCity}` : 'Available Rooms'}</span>
+              {verifiedOnly && (
+                <span className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">
+                  🛡️ Verified Only
+                </span>
+              )}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Showing {rooms.length} {rooms.length === 1 ? 'room listing' : 'room listings'} with verified owners
+              Showing {rooms.length} {rooms.length === 1 ? 'room listing' : 'room listings'} • Direct owner & flatmate connections
             </p>
           </div>
 
@@ -521,10 +720,10 @@ export default function RoomFinderApp() {
               🔍
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-              No rooms match your filters
+              No rooms match your selected criteria
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
-              Try broadening your search criteria or resetting filters to see all vacant listings.
+              Try broadening your filters, turning off &quot;Verified Only&quot; or budget constraints to see all rooms.
             </p>
             <button
               onClick={handleResetFilters}
@@ -541,6 +740,7 @@ export default function RoomFinderApp() {
                 key={room.id}
                 room={room}
                 onSelect={(selected) => setSelectedRoom(selected)}
+                onOpenChat={handleOpenChat}
               />
             ))}
           </div>
@@ -572,9 +772,9 @@ export default function RoomFinderApp() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
             <HomeIcon className="w-4 h-4 text-emerald-600" />
-            <span>RoomFinder • Direct Room Rental Platform</span>
+            <span>RoomFinder • Hyper-Local Direct Room Rental Platform</span>
           </div>
-          <p>© 2026 RoomFinder. Direct Owner to Room Seeker with Exact Map Pinning.</p>
+          <p>© 2026 RoomFinder. Direct Owner to Room Seeker with Verified Badges & 360° Virtual Tours.</p>
         </div>
       </footer>
 
@@ -582,6 +782,7 @@ export default function RoomFinderApp() {
       <RoomDetailModal
         room={selectedRoom}
         onClose={() => setSelectedRoom(null)}
+        onOpenChat={handleOpenChat}
       />
 
       <PostRoomModal
@@ -598,6 +799,13 @@ export default function RoomFinderApp() {
         onDeleteRoom={handleDeleteRoom}
         onSelectRoom={(r) => setSelectedRoom(r)}
         onOpenPostModal={() => setIsPostModalOpen(true)}
+      />
+
+      {/* In-App Direct Chat Gateway Modal */}
+      <InAppChatModal
+        room={chatRoom}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
       />
     </div>
   );
