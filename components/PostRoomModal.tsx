@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { RoomListing, RoomType, SuitableFor, Coordinates } from '@/types/room';
 import MapPicker from './MapPicker';
+import { useAuth } from '@/context/AuthContext';
 import {
   X,
   Upload,
@@ -46,6 +47,7 @@ const SAMPLE_PRESETS = [
 ];
 
 export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRoomModalProps) {
+  const { user, openAuthModal } = useAuth();
   const [step, setStep] = useState<number>(1);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string>('');
@@ -110,6 +112,16 @@ export default function PostRoomModal({ isOpen, onClose, onRoomCreated }: PostRo
   const [phone, setPhone] = useState<string>('');
   const [whatsapp, setWhatsapp] = useState<string>('');
   const [email, setEmail] = useState<string>('');
+
+  useEffect(() => {
+    if (user && isOpen) {
+      if (!contactName) setContactName(user.name);
+      if (!phone) setPhone(user.phone);
+      if (!whatsapp) setWhatsapp(user.phone);
+      if (!email) setEmail(user.email);
+      if (user.role === 'owner') setListerType('Owner');
+    }
+  }, [user, isOpen]);
 
   if (!isOpen) return null;
 

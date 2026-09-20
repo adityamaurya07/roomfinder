@@ -462,28 +462,34 @@ export default function RoomFinderApp() {
             </select>
 
             {/* View Mode Toggle (Grid vs Map) */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl">
+            <div className="flex items-center bg-slate-900/90 border border-slate-700/80 p-1 rounded-xl shadow-inner">
               <button
+                type="button"
                 onClick={() => setActiveTab('explore')}
-                className={`p-1.5 rounded-lg transition ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                   activeTab === 'explore'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
                 }`}
-                title="Grid View"
               >
-                <Grid3X3 className="w-4 h-4" />
+                <Grid3X3 className="w-3.5 h-3.5" />
+                <span>Cards</span>
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('map')}
-                className={`p-1.5 rounded-lg transition ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                   activeTab === 'map'
-                    ? 'bg-white dark:bg-slate-700 text-emerald-600 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-sm'
+                    : 'text-emerald-400 hover:text-white'
                 }`}
-                title="Map View"
               >
-                <MapIcon className="w-4 h-4" />
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                </span>
+                <MapIcon className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Map ({rooms.length})</span>
               </button>
             </div>
           </div>
@@ -684,49 +690,63 @@ export default function RoomFinderApp() {
         )}
 
         {/* Results Header */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
-            <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h2 className="text-xl font-black text-white flex items-center gap-2">
               <span>{selectedCity !== 'All' ? `Available Rooms in ${selectedCity}` : 'Available Rooms'}</span>
               {verifiedOnly && (
-                <span className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-0.5 rounded-full font-bold">
+                <span className="text-xs bg-emerald-950 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">
                   🛡️ Verified Only
                 </span>
               )}
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-400">
               Showing {rooms.length} {rooms.length === 1 ? 'room listing' : 'room listings'} • Direct owner & flatmate connections
             </p>
           </div>
 
-          {/* Quick Post Room Button */}
-          <button
-            onClick={() => setIsPostModalOpen(true)}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl border border-emerald-600 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition"
-          >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>Have a room to rent? Post it</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Prominent Map View Callout Button */}
+            <button
+              type="button"
+              onClick={() => setActiveTab(activeTab === 'explore' ? 'map' : 'explore')}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-emerald-500/40 shadow-lg shadow-emerald-950/40 transition active:scale-95 cursor-pointer"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <MapIcon className="w-4 h-4 text-emerald-400" />
+              <span>{activeTab === 'explore' ? `🗺️ View ${rooms.length} Pins on Live Map` : '📋 Show Room Grid'}</span>
+            </button>
+
+            {/* Quick Post Room Button */}
+            <button
+              onClick={() => setIsPostModalOpen(true)}
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/50 transition"
+            >
+              <PlusCircle className="w-3.5 h-3.5" />
+              <span>Post Room</span>
+            </button>
+          </div>
         </div>
 
         {/* Loading Spinner */}
         {isLoading ? (
           <div className="py-24 text-center">
             <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+            <p className="text-sm font-semibold text-slate-400">
               Finding best available rooms...
             </p>
           </div>
         ) : rooms.length === 0 ? (
           /* Empty State */
-          <div className="py-16 text-center bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 max-w-lg mx-auto shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 flex items-center justify-center mx-auto mb-4 text-2xl">
-              🔍
-            </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
-              No rooms match your selected criteria
+          <div className="py-20 text-center bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-8">
+            <HomeIcon className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-50" />
+            <h3 className="text-lg font-bold text-white mb-1">
+              No rooms found matching your criteria
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
+            <p className="text-xs text-slate-400 max-w-md mx-auto mb-5">
               Try broadening your filters, turning off &quot;Verified Only&quot; or budget constraints to see all rooms.
             </p>
             <button
@@ -745,6 +765,10 @@ export default function RoomFinderApp() {
                 room={room}
                 onSelect={(selected) => setSelectedRoom(selected)}
                 onOpenChat={handleOpenChat}
+                onViewOnMap={(selected) => {
+                  setSelectedRoom(selected);
+                  setActiveTab('map');
+                }}
               />
             ))}
           </div>
@@ -760,14 +784,39 @@ export default function RoomFinderApp() {
         )}
       </main>
 
+      {/* Floating Bottom Live Map Toggle Button (Accessible on Mobile & Desktop) */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+        <button
+          type="button"
+          onClick={() => setActiveTab(activeTab === 'explore' ? 'map' : 'explore')}
+          className="group px-5 py-2.5 rounded-full bg-slate-900/95 hover:bg-slate-900 text-white font-bold text-xs sm:text-sm shadow-2xl shadow-emerald-900/60 border border-emerald-500/50 backdrop-blur-xl flex items-center gap-2.5 transition transform hover:scale-105 active:scale-95 cursor-pointer"
+        >
+          {activeTab === 'explore' ? (
+            <>
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+              </span>
+              <MapIcon className="w-4 h-4 text-emerald-400 group-hover:rotate-12 transition-transform" />
+              <span>🗺️ Show Map ({rooms.length})</span>
+            </>
+          ) : (
+            <>
+              <Grid3X3 className="w-4 h-4 text-teal-400" />
+              <span>📋 Show Listings</span>
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Floating Mobile Post Button */}
-      <div className="fixed bottom-5 right-5 sm:hidden z-30">
+      <div className="fixed bottom-6 right-4 sm:hidden z-30">
         <button
           onClick={() => setIsPostModalOpen(true)}
-          className="px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full shadow-2xl font-bold text-xs flex items-center gap-2 border-2 border-white"
+          className="p-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-full shadow-2xl font-bold text-xs flex items-center justify-center border border-emerald-400/50"
+          title="Post Room"
         >
-          <PlusCircle className="w-4 h-4" />
-          <span>Post Room</span>
+          <PlusCircle className="w-5 h-5" />
         </button>
       </div>
 

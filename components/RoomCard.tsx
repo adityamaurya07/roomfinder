@@ -8,9 +8,10 @@ interface RoomCardProps {
   room: RoomListing;
   onSelect: (room: RoomListing) => void;
   onOpenChat?: (room: RoomListing) => void;
+  onViewOnMap?: (room: RoomListing) => void;
 }
 
-export default function RoomCard({ room, onSelect, onOpenChat }: RoomCardProps) {
+export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: RoomCardProps) {
   const defaultImage = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
   const coverImage = room.images && room.images.length > 0 ? room.images[0] : defaultImage;
 
@@ -117,9 +118,24 @@ export default function RoomCard({ room, onSelect, onOpenChat }: RoomCardProps) 
           </h3>
 
           {/* Location */}
-          <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
-            <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-            <span className="truncate">{room.area}, {room.city}</span>
+          <div className="flex items-center justify-between gap-1 text-xs text-slate-400 mb-2">
+            <div className="flex items-center gap-1 truncate">
+              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="truncate">{room.area}, {room.city}</span>
+            </div>
+            {onViewOnMap && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onViewOnMap(room);
+                }}
+                className="shrink-0 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30"
+                title="View exact location on Map"
+              >
+                <span>🗺️ Pin</span>
+              </button>
+            )}
           </div>
 
           {/* Hyper-Local Metro Distance Pill */}

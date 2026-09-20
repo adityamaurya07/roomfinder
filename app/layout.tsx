@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GlobalThreeBackground from "@/components/GlobalThreeBackground";
+import { AuthProvider } from "@/context/AuthContext";
+import NextAuthProvider from "@/components/NextAuthProvider";
+import AuthModal from "@/components/AuthModal";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -41,8 +44,13 @@ export default function RootLayout({
         suppressHydrationWarning
         className="min-h-full flex flex-col relative bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white"
       >
-        <GlobalThreeBackground />
-        {children}
+        <NextAuthProvider>
+          <AuthProvider>
+            <GlobalThreeBackground />
+            {children}
+            <AuthModal />
+          </AuthProvider>
+        </NextAuthProvider>
       </body>
     </html>
   );
