@@ -25,7 +25,7 @@ export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: Ro
   const hasVirtualTour = Boolean(room.virtualTour360Url || room.videoUrl);
 
   return (
-    <div className="group bg-slate-900/85 backdrop-blur-xl rounded-2xl border border-slate-800/90 hover:border-emerald-500/50 shadow-lg hover:shadow-2xl hover:shadow-emerald-950/40 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col text-slate-100">
+    <div className="group bg-white/95 dark:bg-slate-900/85 backdrop-blur-xl rounded-2xl border border-emerald-100/90 dark:border-slate-800/90 hover:border-emerald-500/60 dark:hover:border-emerald-500/50 shadow-md hover:shadow-2xl hover:shadow-emerald-500/15 dark:hover:shadow-emerald-950/40 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col text-slate-900 dark:text-slate-100">
       {/* Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 cursor-pointer" onClick={() => onSelect(room)}>
         <img
@@ -118,9 +118,9 @@ export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: Ro
           </h3>
 
           {/* Location */}
-          <div className="flex items-center justify-between gap-1 text-xs text-slate-400 mb-2">
+          <div className="flex items-center justify-between gap-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
             <div className="flex items-center gap-1 truncate">
-              <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <MapPin className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
               <span className="truncate">{room.area}, {room.city}</span>
             </div>
             {onViewOnMap && (
@@ -130,7 +130,7 @@ export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: Ro
                   e.stopPropagation();
                   onViewOnMap(room);
                 }}
-                className="shrink-0 text-[10px] font-bold text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-500/30"
+                className="shrink-0 text-[10px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline flex items-center gap-0.5 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-500/30"
                 title="View exact location on Map"
               >
                 <span>🗺️ Pin</span>
@@ -140,7 +140,7 @@ export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: Ro
 
           {/* Hyper-Local Metro Distance Pill */}
           {room.nearbyPlaces?.metro && (
-            <div className="mb-2.5 inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-900/60">
+            <div className="mb-2.5 inline-flex items-center gap-1 text-[11px] font-semibold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 px-2 py-0.5 rounded-md border border-teal-200/70 dark:border-teal-900/60">
               <span>🚇 {room.nearbyPlaces.metro.name}</span>
               <span>•</span>
               <span>{room.nearbyPlaces.metro.distanceKm} km</span>
@@ -168,13 +168,13 @@ export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: Ro
             {room.amenities.slice(0, 3).map((amenity, idx) => (
               <span
                 key={idx}
-                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-emerald-50/70 dark:bg-slate-800 text-emerald-900 dark:text-slate-300 border border-emerald-100/80 dark:border-slate-700/50"
               >
                 {amenity}
               </span>
             ))}
             {room.amenities.length > 3 && (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800 text-slate-500">
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500">
                 +{room.amenities.length - 3} more
               </span>
             )}
@@ -185,7 +185,7 @@ export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: Ro
         <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
           {/* Owner details preview */}
           <div className="text-xs">
-            <span className="text-slate-400 block text-[10px]">{room.listerType || 'Host'}</span>
+            <span className="text-slate-400 dark:text-slate-500 block text-[10px]">{room.listerType || 'Host'}</span>
             <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block max-w-[80px]">
               {room.contact.name}
             </span>
@@ -195,7 +195,7 @@ export default function RoomCard({ room, onSelect, onOpenChat, onViewOnMap }: Ro
             {/* View Details */}
             <button
               onClick={() => onSelect(room)}
-              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
+              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition"
               title="View room details & map"
             >
               Details

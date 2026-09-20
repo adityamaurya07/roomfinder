@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import GlobalThreeBackground from "@/components/GlobalThreeBackground";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import NextAuthProvider from "@/components/NextAuthProvider";
 import AuthModal from "@/components/AuthModal";
 
@@ -42,15 +43,17 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col relative bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white"
+        className="min-h-full flex flex-col relative bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-emerald-500 selection:text-white transition-colors duration-300"
       >
-        <NextAuthProvider>
-          <AuthProvider>
-            <GlobalThreeBackground />
-            {children}
-            <AuthModal />
-          </AuthProvider>
-        </NextAuthProvider>
+        <ThemeProvider>
+          <NextAuthProvider>
+            <AuthProvider>
+              <GlobalThreeBackground />
+              {children}
+              <AuthModal />
+            </AuthProvider>
+          </NextAuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

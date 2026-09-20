@@ -257,7 +257,7 @@ export default function RoomFinderApp() {
     selectedAmenities.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-transparent text-slate-100">
+    <div className="min-h-screen flex flex-col bg-transparent text-slate-900 dark:text-slate-100">
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-20 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-950 px-4 py-3 rounded-xl shadow-2xl border border-slate-700 dark:border-slate-300 text-sm font-semibold flex items-center gap-2 animate-fadeIn">
@@ -462,14 +462,14 @@ export default function RoomFinderApp() {
             </select>
 
             {/* View Mode Toggle (Grid vs Map) */}
-            <div className="flex items-center bg-slate-900/90 border border-slate-700/80 p-1 rounded-xl shadow-inner">
+            <div className="flex items-center bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700/80 p-1 rounded-xl shadow-inner">
               <button
                 type="button"
                 onClick={() => setActiveTab('explore')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                   activeTab === 'explore'
                     ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-white'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 <Grid3X3 className="w-3.5 h-3.5" />
@@ -481,14 +481,14 @@ export default function RoomFinderApp() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
                   activeTab === 'map'
                     ? 'bg-gradient-to-r from-teal-600 to-emerald-600 text-white shadow-sm'
-                    : 'text-emerald-400 hover:text-white'
+                    : 'text-emerald-700 dark:text-emerald-400 hover:text-emerald-900 dark:hover:text-white'
                 }`}
               >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                 </span>
-                <MapIcon className="w-3.5 h-3.5 text-emerald-300" />
+                <MapIcon className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-300" />
                 <span>Map ({rooms.length})</span>
               </button>
             </div>
@@ -497,8 +497,8 @@ export default function RoomFinderApp() {
 
         {/* Expandable Smart Filter Drawer */}
         {showFilterDrawer && (
-          <div className="bg-slate-900/85 backdrop-blur-xl p-5 rounded-2xl border border-slate-700/60 shadow-2xl mb-6 space-y-5 animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-slate-700/60 pb-3">
+          <div className="bg-white/95 dark:bg-slate-900/85 backdrop-blur-xl p-5 rounded-2xl border border-emerald-100 dark:border-slate-700/60 shadow-xl dark:shadow-2xl mb-6 space-y-5 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-700/60 pb-3">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
                 <span>Filters & Roommate Compatibility</span>
@@ -692,15 +692,15 @@ export default function RoomFinderApp() {
         {/* Results Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
           <div>
-            <h2 className="text-xl font-black text-white flex items-center gap-2">
+            <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
               <span>{selectedCity !== 'All' ? `Available Rooms in ${selectedCity}` : 'Available Rooms'}</span>
               {verifiedOnly && (
-                <span className="text-xs bg-emerald-950 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">
+                <span className="text-xs bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold">
                   🛡️ Verified Only
                 </span>
               )}
             </h2>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Showing {rooms.length} {rooms.length === 1 ? 'room listing' : 'room listings'} • Direct owner & flatmate connections
             </p>
           </div>
@@ -710,20 +710,20 @@ export default function RoomFinderApp() {
             <button
               type="button"
               onClick={() => setActiveTab(activeTab === 'explore' ? 'map' : 'explore')}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-emerald-500/40 shadow-lg shadow-emerald-950/40 transition active:scale-95 cursor-pointer"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold bg-white dark:bg-slate-900/90 hover:bg-emerald-50 dark:hover:bg-slate-800 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-500/40 shadow-sm transition active:scale-95 cursor-pointer"
             >
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
               </span>
-              <MapIcon className="w-4 h-4 text-emerald-400" />
+              <MapIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>{activeTab === 'explore' ? `🗺️ View ${rooms.length} Pins on Live Map` : '📋 Show Room Grid'}</span>
             </button>
 
             {/* Quick Post Room Button */}
             <button
               onClick={() => setIsPostModalOpen(true)}
-              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/50 transition"
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl border border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/50 transition"
             >
               <PlusCircle className="w-3.5 h-3.5" />
               <span>Post Room</span>
@@ -735,18 +735,18 @@ export default function RoomFinderApp() {
         {isLoading ? (
           <div className="py-24 text-center">
             <RefreshCw className="w-8 h-8 text-emerald-600 animate-spin mx-auto mb-3" />
-            <p className="text-sm font-semibold text-slate-400">
+            <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">
               Finding best available rooms...
             </p>
           </div>
         ) : rooms.length === 0 ? (
           /* Empty State */
-          <div className="py-20 text-center bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-800 p-8">
-            <HomeIcon className="w-12 h-12 text-slate-500 mx-auto mb-3 opacity-50" />
-            <h3 className="text-lg font-bold text-white mb-1">
+          <div className="py-20 text-center bg-white/90 dark:bg-slate-900/80 backdrop-blur-md rounded-2xl border border-slate-200 dark:border-slate-800 p-8 shadow-sm">
+            <HomeIcon className="w-12 h-12 text-slate-400 mx-auto mb-3 opacity-50" />
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">
               No rooms found matching your criteria
             </h3>
-            <p className="text-xs text-slate-400 max-w-md mx-auto mb-5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mb-5">
               Try broadening your filters, turning off &quot;Verified Only&quot; or budget constraints to see all rooms.
             </p>
             <button

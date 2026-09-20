@@ -2,9 +2,67 @@
 
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function GlobalThreeBackground() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const materialsRef = useRef<{
+    wireframeMaterials: THREE.MeshBasicMaterial[];
+    nodeMat: THREE.PointsMaterial;
+    lineMat: THREE.LineBasicMaterial;
+    starMat: THREE.PointsMaterial;
+  } | null>(null);
+
+  // Sync theme changes to Three.js scene fog & particle colors
+  useEffect(() => {
+    if (!sceneRef.current || !materialsRef.current) return;
+    const isLight = theme === 'light';
+    if (sceneRef.current.fog && sceneRef.current.fog instanceof THREE.FogExp2) {
+      sceneRef.current.fog.color.setHex(isLight ? 0xf0fdf4 : 0x020617);
+    }
+    const { wireframeMaterials, nodeMat, lineMat, starMat } = materialsRef.current;
+    if (isLight) {
+      if (wireframeMaterials[0]) {
+        wireframeMaterials[0].color.setHex(0x059669);
+        wireframeMaterials[0].opacity = 0.32;
+      }
+      if (wireframeMaterials[1]) {
+        wireframeMaterials[1].color.setHex(0x0d9488);
+        wireframeMaterials[1].opacity = 0.28;
+      }
+      if (wireframeMaterials[2]) {
+        wireframeMaterials[2].color.setHex(0x10b981);
+        wireframeMaterials[2].opacity = 0.38;
+      }
+      nodeMat.color.setHex(0x059669);
+      nodeMat.opacity = 0.75;
+      lineMat.color.setHex(0x047857);
+      lineMat.opacity = 0.22;
+      starMat.color.setHex(0x059669);
+      starMat.opacity = 0.35;
+    } else {
+      if (wireframeMaterials[0]) {
+        wireframeMaterials[0].color.setHex(0x10b981);
+        wireframeMaterials[0].opacity = 0.22;
+      }
+      if (wireframeMaterials[1]) {
+        wireframeMaterials[1].color.setHex(0x06b6d4);
+        wireframeMaterials[1].opacity = 0.18;
+      }
+      if (wireframeMaterials[2]) {
+        wireframeMaterials[2].color.setHex(0x34d399);
+        wireframeMaterials[2].opacity = 0.28;
+      }
+      nodeMat.color.setHex(0x34d399);
+      nodeMat.opacity = 0.65;
+      lineMat.color.setHex(0x059669);
+      lineMat.opacity = 0.15;
+      starMat.color.setHex(0x6ee7b7);
+      starMat.opacity = 0.45;
+    }
+  }, [theme]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -14,7 +72,8 @@ export default function GlobalThreeBackground() {
 
     // 1. Scene & Camera setup
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x020617, 0.008); // slate-950 deep atmosphere fog
+    scene.fog = new THREE.FogExp2(theme === 'light' ? 0xf0fdf4 : 0x020617, 0.008);
+    sceneRef.current = scene;
 
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -190,6 +249,36 @@ export default function GlobalThreeBackground() {
     const starField = new THREE.Points(starGeom, starMat);
     scene.add(starField);
 
+    // Save references for dynamic theme updates
+    materialsRef.current = {
+      wireframeMaterials,
+      nodeMat,
+      lineMat,
+      starMat
+    };
+
+    // Apply initial theme styles if light mode
+    if (theme === 'light') {
+      if (wireframeMaterials[0]) {
+        wireframeMaterials[0].color.setHex(0x059669);
+        wireframeMaterials[0].opacity = 0.32;
+      }
+      if (wireframeMaterials[1]) {
+        wireframeMaterials[1].color.setHex(0x0d9488);
+        wireframeMaterials[1].opacity = 0.28;
+      }
+      if (wireframeMaterials[2]) {
+        wireframeMaterials[2].color.setHex(0x10b981);
+        wireframeMaterials[2].opacity = 0.38;
+      }
+      nodeMat.color.setHex(0x059669);
+      nodeMat.opacity = 0.75;
+      lineMat.color.setHex(0x047857);
+      lineMat.opacity = 0.22;
+      starMat.color.setHex(0x059669);
+      starMat.opacity = 0.35;
+    }
+
     // 6. Interactive Parallax & Scroll Listeners
     let mouseX = 0;
     let mouseY = 0;
@@ -276,16 +365,21 @@ export default function GlobalThreeBackground() {
         container.removeChild(renderer.domElement);
       }
       renderer.dispose();
+      sceneRef.current = null;
+      materialsRef.current = null;
     };
   }, []);
 
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 w-full h-full pointer-events-none -z-10 overflow-hidden"
+      className="fixed inset-0 w-full h-full pointer-events-none -z-10 overflow-hidden transition-all duration-700"
       aria-hidden="true"
       style={{
-        background: 'radial-gradient(ellipse at 50% 15%, rgba(6, 78, 59, 0.22) 0%, rgba(2, 6, 23, 0.95) 70%, #020617 100%)'
+        background:
+          theme === 'light'
+            ? 'radial-gradient(ellipse at 50% 15%, rgba(16, 185, 129, 0.12) 0%, rgba(240, 253, 244, 0.85) 45%, #ffffff 100%)'
+            : 'radial-gradient(ellipse at 50% 15%, rgba(6, 78, 59, 0.22) 0%, rgba(2, 6, 23, 0.95) 70%, #020617 100%)'
       }}
     />
   );

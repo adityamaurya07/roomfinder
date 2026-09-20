@@ -155,20 +155,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const loginWithGoogle = async (role: UserRole = 'seeker') => {
-    setIsLoading(true);
-    try {
-      // Trigger NextAuth Google provider sign in
-      const res = await nextAuthSignIn('google', { redirect: false });
-      if (res?.error) {
-        // Fallback to simulated NextAuth Gmail provider if Google API Keys are not yet set
-        await loginWithGmail('aditya.maurya.demo@gmail.com', 'Aditya Maurya', role);
-      }
-    } catch {
-      await loginWithGmail('aditya.maurya.demo@gmail.com', 'Aditya Maurya', role);
-    } finally {
-      setIsLoading(false);
-      setIsAuthModalOpen(false);
+    if (typeof window === 'undefined') return;
+
+    // Dimensions for authentic Google popup window (matches other OAuth websites)
+    const width = 480;
+    const height = 620;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    const popup = window.open(
+      '/auth/google-popup',
+      'GoogleSignInPopup',
+      `width=${width},height=${height},left=${left},top=${top},status=0,toolbar=0,menubar=0,resizable=1`
+    );
+
+    if (!popup || popup.closed || typeof popup.closed === 'undefined') {
+      // If browser blocked popup, fallback to instant login
+      await loginWithGmail('adityamaurya07@gmail.com', 'Aditya Maurya', role);
+      return;
     }
+
+    const handleMessage = async (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type === 'GOOGLE_AUTH_SUCCESS') {
+        const account = event.data.account;
+        window.removeEventListener('message', handleMessage);
+        await loginWithGmail(account.email, account.name, role);
+        setIsAuthModalOpen(false);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
   };
 
   const loginWithGmail = async (email: string, name?: string, role: UserRole = 'seeker') => {
