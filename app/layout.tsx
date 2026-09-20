@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import GlobalThreeBackground from "@/components/GlobalThreeBackground";
 
 const geistSans = Geist({
   variable: "--font-sans",
@@ -38,8 +39,9 @@ export default function RootLayout({
       </head>
       <body
         suppressHydrationWarning
-        className="min-h-full flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100"
+        className="min-h-full flex flex-col relative bg-slate-950 text-slate-100 selection:bg-emerald-500 selection:text-white"
       >
+        <GlobalThreeBackground />
         {children}
       </body>
     </html>

@@ -24,7 +24,7 @@ export default function RoomCard({ room, onSelect, onOpenChat }: RoomCardProps) 
   const hasVirtualTour = Boolean(room.virtualTour360Url || room.videoUrl);
 
   return (
-    <div className="group bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col">
+    <div className="group bg-slate-900/85 backdrop-blur-xl rounded-2xl border border-slate-800/90 hover:border-emerald-500/50 shadow-lg hover:shadow-2xl hover:shadow-emerald-950/40 hover:-translate-y-1 transition-all duration-300 overflow-hidden flex flex-col text-slate-100">
       {/* Image Container */}
       <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 dark:bg-slate-800 cursor-pointer" onClick={() => onSelect(room)}>
         <img

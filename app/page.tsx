@@ -257,7 +257,7 @@ export default function RoomFinderApp() {
     selectedAmenities.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
+    <div className="min-h-screen flex flex-col bg-transparent text-slate-100">
       {/* Toast Notification */}
       {notification && (
         <div className="fixed top-20 right-5 z-50 bg-slate-900 text-white dark:bg-white dark:text-slate-950 px-4 py-3 rounded-xl shadow-2xl border border-slate-700 dark:border-slate-300 text-sm font-semibold flex items-center gap-2 animate-fadeIn">
@@ -276,7 +276,7 @@ export default function RoomFinderApp() {
       />
 
       {/* Hero Search Section */}
-      <div className="relative bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-900 text-white pt-10 pb-14 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <div className="relative bg-gradient-to-b from-emerald-950/70 via-teal-950/50 to-slate-950/60 text-white pt-10 pb-14 px-4 sm:px-6 lg:px-8 overflow-hidden border-b border-emerald-900/30">
         {/* Three.js 3D Interactive Graphics Canvas */}
         <Hero3DCanvas />
 
@@ -491,8 +491,8 @@ export default function RoomFinderApp() {
 
         {/* Expandable Smart Filter Drawer */}
         {showFilterDrawer && (
-          <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl mb-6 space-y-5 animate-fadeIn">
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="bg-slate-900/85 backdrop-blur-xl p-5 rounded-2xl border border-slate-700/60 shadow-2xl mb-6 space-y-5 animate-fadeIn">
+            <div className="flex items-center justify-between border-b border-slate-700/60 pb-3">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-emerald-600" />
                 <span>Filters & Roommate Compatibility</span>
