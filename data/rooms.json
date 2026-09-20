@@ -1,5 +1,64 @@
 [
   {
+    "title": "kkln",
+    "description": "hiob  jknj kj kj jkjk",
+    "roomType": "1 BHK",
+    "suitableFor": "All",
+    "pricePerMonth": 897877,
+    "securityDeposit": 788,
+    "maintenanceIncluded": true,
+    "availableFrom": "Immediately",
+    "isAvailable": true,
+    "city": "Delhi",
+    "area": "njnjkikj j",
+    "fullAddress": "Preet Vihar, Laxmi Nagar, Shahdara South, Delhi, East Delhi, Delhi, 110031, India",
+    "landmark": "bkjbjlblioilo",
+    "coordinates": {
+      "lat": 28.632223906548766,
+      "lng": 77.27658240063705
+    },
+    "amenities": [
+      "WiFi",
+      "Attached Washroom",
+      "AC",
+      "Food/Tiffin"
+    ],
+    "furnishedStatus": "Semi-Furnished",
+    "images": [
+      "https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=1000&q=80",
+      "/uploads/room_1789875919742_zgtv_Main_Dashboard__1_.jpg",
+      "/uploads/room_1789875928074_ofs7_pexels-anjana-c-169994-674010.jpg"
+    ],
+    "videoUrl": "https://lorem.video/720p",
+    "virtualTour360Url": "https://renderstuff.com/tools/360-panorama-web-viewer/panorama_360_vr",
+    "isVerified": true,
+    "verificationBadge": "Aadhaar Verified",
+    "listerType": "Owner",
+    "pricingType": "Negotiable",
+    "nearbyPlaces": {},
+    "roommatePreferences": {
+      "foodPreference": "Veg",
+      "smoking": "Non-Smoker",
+      "drinking": "Non-Drinker",
+      "professionPreference": [
+        "IT",
+        "Working Professionals",
+        "Students"
+      ],
+      "genderPreference": "Any"
+    },
+    "contact": {
+      "name": "Aditya Maurya",
+      "phone": "6392371826",
+      "whatsapp": "3514351151",
+      "email": "aditya2018m@gmail.com"
+    },
+    "ownerId": "owner-1789660166658",
+    "id": "room-1789876151763-m1bik",
+    "createdAt": "2026-09-20T03:49:11.764Z",
+    "updatedAt": "2026-09-20T03:49:11.764Z"
+  },
+  {
     "title": "Verified Studio near Metro Station",
     "description": "",
     "roomType": "1 RK",

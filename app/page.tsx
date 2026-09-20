@@ -9,6 +9,7 @@ import PostRoomModal from '@/components/PostRoomModal';
 import MyListingsModal from '@/components/MyListingsModal';
 import RoomsMap from '@/components/RoomsMap';
 import InAppChatModal from '@/components/InAppChatModal';
+import Hero3DCanvas from '@/components/Hero3DCanvas';
 import {
   Search,
   MapPin,
@@ -276,6 +277,9 @@ export default function RoomFinderApp() {
 
       {/* Hero Search Section */}
       <div className="relative bg-gradient-to-b from-emerald-950 via-teal-950 to-slate-900 text-white pt-10 pb-14 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* Three.js 3D Interactive Graphics Canvas */}
+        <Hero3DCanvas />
+
         {/* Glow decorative orbs */}
         <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute top-10 right-0 w-80 h-80 bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
